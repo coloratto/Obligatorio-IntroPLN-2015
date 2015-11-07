@@ -1,0 +1,25 @@
+
+
+def diccionarioElementosSubjetivos(archivoElementosSubjetivos):
+    positivosRaw = open(archivoElementosSubjetivos).read()
+    positivosRaw = positivosRaw.replace(u'\ufeff', '')
+    positivosRaw = positivosRaw.replace('elementoSubjetivo','')
+    positivosRaw = positivosRaw.strip()
+    regex = re.compile(r"%.*\n", re.IGNORECASE | re.MULTILINE)
+    positivosRaw = re.sub(regex,'',positivosRaw)
+    regex = re.compile(r"\)(.[^\)\(]|\s[^\)\(])*\(",re.IGNORECASE | re.MULTILINE)
+    positivosRaw = re.sub(regex,').(',positivosRaw)
+    arregloPositivos = positivosRaw.split('.')
+    #Saco punto final
+    tope = len(arregloPositivos) -1
+    arregloPositivos.pop(tope)
+    tuplas = ()
+    #Voy a tener un diccionario palabra:valor
+    for tupla in arregloPositivos:
+        #print(ast.literal_eval(tupla))
+        tuplas = tuplas + (ast.literal_eval(tupla.strip()),)
+    
+    #print (tuplas)
+    diccionario = dict(tuplas)
+    return diccionario
+
