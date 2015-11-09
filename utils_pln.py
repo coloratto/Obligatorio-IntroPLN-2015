@@ -1,6 +1,7 @@
 import ast
 import re
 import nltk
+from nltk.corpus import stopwords
 
 def diccionarioElementosSubjetivos(archivoElementosSubjetivos):
     positivosRaw = open(archivoElementosSubjetivos).read()
@@ -98,12 +99,33 @@ def palabras_mas_frecuentes (n,datos):
     cantPalabras = 0
     palabras = {}
     for i in range(0, len(datos)):
-        for palabra in datos[i][0]:
+        for palabra in nltk.word_tokenize(datos[i][0]):
             if(palabra.lower() in palabras): 
                     palabras[palabra.lower()] = palabras[palabra.lower()] + 1
             else:
                     palabras[palabra.lower()] = 1
 
     palabrasOrdenadasPorFrecuencia = sorted(palabras, key=palabras.get, reverse=True)
+	
+    if(n==-1):
+        return palabrasOrdenadasPorFrecuencia
+    else:
+        return palabrasOrdenadasPorFrecuencia[:n]  
 
-    return palabrasOrdenadasPorFrecuencia[:n]    
+def filtrar_palabras(datos, n):
+    filtroSW = []
+    filtroAC = []
+
+    dominio_cine_peliculas = open('terminosNoValorativosAmbitoCine.txt').read()
+    palabras_f = palabras_mas_frecuentes(n,datos)
+    nltk_stopwords = stopwords.words('spanish')
+    datos_train_frec = []
+
+    #Aplico distintos filtros a las palabras de los comentarios
+    for i in range(0,len(datos)):
+        #elimino stopwords
+        palabras_frecuentes = [w for w in nltk.word_tokenize(datos[i][0]) if w in palabras_f]
+        filtroSW = [w for w in palabras_frecuentes if not w in nltk_stopwords]
+        filtroAC = [w for w in filtroSW if not w in dominio_cine_peliculas]
+        datos_train_frec.insert(i,(" ".join(filtroAC),datos[i][1]))
+    return datos_train_frec
