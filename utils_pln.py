@@ -117,6 +117,7 @@ def filtrar_palabras(datos, n):
     filtroAC = []
 
     dominio_cine_peliculas = open('terminosNoValorativosAmbitoCine.txt').read()
+    caracteres_especiales = open('caracteres_especiales.txt').read()
     palabras_f = palabras_mas_frecuentes(n,datos)
     nltk_stopwords = stopwords.words('spanish')
     datos_train_frec = []
@@ -124,8 +125,10 @@ def filtrar_palabras(datos, n):
     #Aplico distintos filtros a las palabras de los comentarios
     for i in range(0,len(datos)):
         #elimino stopwords
-        palabras_frecuentes = [w for w in nltk.word_tokenize(datos[i][0]) if w in palabras_f]
-        filtroSW = [w for w in palabras_frecuentes if not w in nltk_stopwords]
+        filtroSW = [w for w in nltk.word_tokenize(datos[i][0]) if not w in nltk_stopwords]
         filtroAC = [w for w in filtroSW if not w in dominio_cine_peliculas]
-        datos_train_frec.insert(i,(" ".join(filtroAC),datos[i][1]))
+        filtroCE = [w for w in filtroAC if not w in caracteres_especiales]
+        palabras_frecuentes = [w for w in filtroCE if w in palabras_f]
+        
+        datos_train_frec.insert(i,(" ".join(palabras_frecuentes),datos[i][1]))
     return datos_train_frec
