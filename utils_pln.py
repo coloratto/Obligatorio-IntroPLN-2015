@@ -112,23 +112,54 @@ def palabras_mas_frecuentes (n,datos):
     else:
         return palabrasOrdenadasPorFrecuencia[:n]  
 
-def filtrar_palabras(datos, n):
-    filtroSW = []
-    filtroAC = []
-
-    dominio_cine_peliculas = open('terminosNoValorativosAmbitoCine.txt').read()
-    caracteres_especiales = open('caracteres_especiales.txt').read()
-    palabras_f = palabras_mas_frecuentes(n,datos)
-    nltk_stopwords = stopwords.words('spanish')
-    datos_train_frec = []
-
-    #Aplico distintos filtros a las palabras de los comentarios
+def filtrar(datos,filtro,not_in):
+    datos_filtrados = []
     for i in range(0,len(datos)):
-        #elimino stopwords
-        filtroSW = [w for w in nltk.word_tokenize(datos[i][0]) if not w in nltk_stopwords]
-        filtroAC = [w for w in filtroSW if not w in dominio_cine_peliculas]
-        filtroCE = [w for w in filtroAC if not w in caracteres_especiales]
-        palabras_frecuentes = [w for w in filtroCE if w in palabras_f]
+        if(not_in):
+            filt = [w for w in nltk.word_tokenize(datos[i][0]) if not w in filtro]    
+        else:
+            filt = [w for w in nltk.word_tokenize(datos[i][0]) if w in filtro]
+        datos_filtrados.insert(i,(" ".join(filt),datos[i][1]))
+    return datos_filtrados
+
+
+# Funcion que dada una distribución de probabilidad de las clasificaciones
+# devuelve la clasificacion que tiene mayor probabilidad
+def getClasificacion(pdist):
+    
+    # Se inicializa la clasificacion
+    clasificacion = 0;
+    prob = 0
+    
+    # Por cada clasificacion posible, la comparo con la inicializacion
+    # Me quedo con la mas grande
+    for i in range(1,6):
+        if( pdist.prob(i) > prob):
+            clasificacion = i
+            prob = pdist.prob(i)
+
+    return clasificacion
+
+def getTasa(clf,datos_test):
+    # Se define la variable de aciertos
+    aciertos = 0
+    
+    salidaClasificador = []
+    salida = []
+
+    # Para cada comentario del conjunto de testeo se evalua segun el algoritmo entrenado
+    for comentario in datos_test:
+
+        # Se obtiene la clasificacion del algoritmo para el comentario
+        clasificacion = clf.classify(comentario[0])
+        salidaClasificador.append(clasificacion)
+        salida.append(comentario[1])
         
-        datos_train_frec.insert(i,(" ".join(palabras_frecuentes),datos[i][1]))
-    return datos_train_frec
+        # En caso que la clasificacion sea la correcta se aumenta el acierto
+        if(clasificacion == comentario[1]):
+            aciertos += 1
+    
+    cm = nltk.ConfusionMatrix(salidaClasificador, salida)
+    print(cm)
+
+    return float(aciertos)/len(datos_test)
