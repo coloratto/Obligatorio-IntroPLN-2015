@@ -107,7 +107,7 @@ def palabras_mas_frecuentes (n,datos):
                     palabras[palabra.lower()] = 1
 
     palabrasOrdenadasPorFrecuencia = sorted(palabras, key=palabras.get, reverse=True)
-	
+    
     if(n==-1):
         return palabrasOrdenadasPorFrecuencia
     else:
@@ -238,20 +238,20 @@ def getBestFrec (datos):
 
 def POS_tagging(datos):
     listaTuplas = []
+    
+    # Retorna una lista de tuplas. 
+    # Cada tupla posee un diccionario (dict) palabra-frecuencia del comentario y la clasificación asociada
+    # En otras palabras [(dict1, clasificacion1),(dict2, clasificacion2), ... ]
 
-    comentarios = []
+    # Se recorren los comentarios y para cada uno de ellos se tokeniza con nltk
     for i in range(0,len(datos)):
-        comentarios.insert(i,datos[i][0])
-
-        
-    p = Popen("%ANALYZER%/analyzer.ex -f %FREELINGSHARE%/config/es.cfg", shell = True, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-    stdout = p.communicate(input='-----------------------------------'.join(comentarios).encode())[0]
-
-    comentarios_procesados = stdout.decode().split('----------------------------------- ----------------------------------- Fz 1')
-
-    for comentario in comentarios_procesados:
+        # Se crea el diccionario asociado al comentario
         dic = {}
-        for linea in comentario.split('\r\n'):
+        
+        # Por cada palabra retornada de la tokenizacion del comentario
+        p = Popen("%ANALYZER%/analyzer.ex -f %FREELINGSHARE%/config/es.cfg", shell = True, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        stdout = p.communicate(input=datos[i][0].encode())[0]
+        for linea in stdout.decode().split('\r\n'):
             token = linea.split(' ')
             if len(token) < 4: 
                 continue
