@@ -1,16 +1,3 @@
-﻿
-
-
-%%%%  elementos subjetivos
-
-
-%%%% negativos todos con valor -3
-%%%% y positivos todos con valor 3
-
-
-
-%%% negativos (GI 1500 + Redondo 230 )
-
 elementoSubjetivo('ácido',-3).
 elementoSubjetivo('áspero',-3).
 elementoSubjetivo('úlcera',-3).

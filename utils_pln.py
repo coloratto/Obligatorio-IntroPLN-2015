@@ -2,6 +2,7 @@ import ast
 import re
 import nltk
 from nltk.corpus import stopwords
+from subprocess import Popen, PIPE, STDOUT
 
 def diccionarioElementosSubjetivos(archivoElementosSubjetivos):
     positivosRaw = open(archivoElementosSubjetivos).read()
@@ -115,6 +116,7 @@ def palabras_mas_frecuentes (n,datos):
 def filtrar(datos,filtro,not_in):
     datos_filtrados = []
     for i in range(0,len(datos)):
+        #FALSE Se queda con las que pertenecen al conjunto filtro
         if(not_in):
             filt = [w for w in nltk.word_tokenize(datos[i][0]) if not w in filtro]    
         else:
@@ -163,3 +165,113 @@ def getTasa(clf,datos_test):
     print(cm)
 
     return float(aciertos)/len(datos_test)
+
+def codificarClasificacionesSubjetivos(elementos_subjetivos):
+    lista = []
+    for t in elementos_subjetivos:
+
+        clasificacion = 'neg'
+        if elementos_subjetivos[t] == 3:
+            clasificacion = 'pos'
+            
+        lista.append(({t:1},clasificacion))
+    
+    return lista
+
+def getPositivos(elementos_subjetivos):
+    lista = []
+    for t in elementos_subjetivos:
+
+        #clasificacion = 'neg'
+        if elementos_subjetivos[t] == 3:
+            lista.append(t)
+    
+    return lista
+
+def getNegativos(elementos_subjetivos):
+    lista = []
+    for t in elementos_subjetivos:
+
+        #clasificacion = 'neg'
+        if elementos_subjetivos[t] != 3:
+            lista.append(t)
+    
+    return lista
+
+def tokenizar_freeling(datos):
+    listaTuplas = []
+    
+    # Retorna una lista de tuplas. 
+    # Cada tupla posee un diccionario (dict) palabra-frecuencia del comentario y la clasificación asociada
+    # En otras palabras [(dict1, clasificacion1),(dict2, clasificacion2), ... ]
+
+    # Se recorren los comentarios y para cada uno de ellos se tokeniza con nltk
+    for i in range(0,len(datos)):
+        
+        # Se crea el diccionario asociado al comentario
+        dic = {}
+        
+        # Por cada palabra retornada de la tokenizacion del comentario
+        p = Popen("%ANALYZER%/analyzer.ex -f %FREELINGSHARE%/config/es.cfg --outf splitted", shell = True, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        stdout = p.communicate(input=datos[i][0].encode())[0]
+        for palabra in stdout.decode().split('\r\n'):
+            if(palabra == ''):
+                continue
+            # Si la palabra está en el diccionario del comentario, se aumenta la frecuencia
+            # En caso contrario se la pone en el diccionario con valor 1
+            if(palabra.lower() in dic): 
+                dic[palabra.lower()] = dic[palabra.lower()] + 1
+            else:
+                dic[palabra.lower()] = 1
+                
+        # Luego de tokenizado el comentario, se agrega una tupla a la lista que contendrá
+        # el diccionario de frecuencias y la clasificaion asociada al comentario
+        listaTuplas.insert(i,(dic,codificarClasificacion(datos[i][1])))
+    return listaTuplas
+
+def getBestFrec (datos):
+    max_val = (0,0)
+    for i in range(0, len(datos)):
+        if(max_val[1] < datos[i][1]):
+            max_val = datos[i]
+    return max_val[0]
+
+def POS_tagging(datos):
+    listaTuplas = []
+    
+    # Retorna una lista de tuplas. 
+    # Cada tupla posee un diccionario (dict) palabra-frecuencia del comentario y la clasificación asociada
+    # En otras palabras [(dict1, clasificacion1),(dict2, clasificacion2), ... ]
+
+    # Se recorren los comentarios y para cada uno de ellos se tokeniza con nltk
+    for i in range(0,len(datos)):
+        # Se crea el diccionario asociado al comentario
+        dic = {}
+        
+        # Por cada palabra retornada de la tokenizacion del comentario
+        p = Popen("%ANALYZER%/analyzer.ex -f %FREELINGSHARE%/config/es.cfg", shell = True, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+        stdout = p.communicate(input=datos[i][0].encode())[0]
+        for linea in stdout.decode().split('\r\n'):
+            token = linea.split(' ')
+            if len(token) < 4: 
+                continue
+
+            tag = token[2]
+            palabra = token[0]
+            if((tag[0:1] != 'F') && (tag[0:2] != 'RG') && (tag[0:2] != 'DP') && (tag[0:2] != 'DT') && (tag[0:2] != 'DE') 
+                && (tag[0:2] != 'DA') && (tag[0:1] != 'N') && (tag[0:2] != 'RG') && (tag[0:2] != 'PP') && (tag[0:2] != 'PD')
+                && (tag[0:2] != 'PX') && (tag[0:2] != 'PT') && (tag[0:2] != 'PR') && (tag[0:2] != 'PE') && (tag[0:1] != 'I')
+                && (tag[0:1] != 'S') && (tag[0:1] != 'Z') && (tag[0:1] != 'W')):
+
+                # Si la palabra está en el diccionario del comentario, se aumenta la frecuencia
+                # En caso contrario se la pone en el diccionario con valor 1
+                if(palabra.lower() in dic): 
+                    dic[palabra.lower()] = dic[palabra.lower()] + 1
+                else:
+                    dic[palabra.lower()] = 1
+                        
+                # Luego de tokenizado el comentario, se agrega una tupla a la lista que contendrá
+                # el diccionario de frecuencias y la clasificaion asociada al comentario
+                listaTuplas.insert(i,(dic,codificarClasificacion(datos[i][1])))
+
+    return listaTuplas
