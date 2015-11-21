@@ -238,30 +238,30 @@ def getBestFrec (datos):
 
 def POS_tagging(datos):
     listaTuplas = []
-    
-    # Retorna una lista de tuplas. 
-    # Cada tupla posee un diccionario (dict) palabra-frecuencia del comentario y la clasificación asociada
-    # En otras palabras [(dict1, clasificacion1),(dict2, clasificacion2), ... ]
 
-    # Se recorren los comentarios y para cada uno de ellos se tokeniza con nltk
+    comentarios = []
     for i in range(0,len(datos)):
-        # Se crea el diccionario asociado al comentario
-        dic = {}
+        comentarios.insert(i,datos[i][0])
+
         
-        # Por cada palabra retornada de la tokenizacion del comentario
-        p = Popen("%ANALYZER%/analyzer.ex -f %FREELINGSHARE%/config/es.cfg", shell = True, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
-        stdout = p.communicate(input=datos[i][0].encode())[0]
-        for linea in stdout.decode().split('\r\n'):
+    p = Popen("%ANALYZER%/analyzer.ex -f %FREELINGSHARE%/config/es.cfg", shell = True, stdout=PIPE, stdin=PIPE, stderr=STDOUT)
+    stdout = p.communicate(input='-----------------------------------'.join(comentarios).encode())[0]
+
+    comentarios_procesados = stdout.decode().split('----------------------------------- ----------------------------------- Fz 1')
+
+    for comentario in comentarios_procesados:
+        dic = {}
+        for linea in comentario.split('\r\n'):
             token = linea.split(' ')
             if len(token) < 4: 
                 continue
 
             tag = token[2]
             palabra = token[0]
-            if((tag[0:1] != 'F') && (tag[0:2] != 'RG') && (tag[0:2] != 'DP') && (tag[0:2] != 'DT') && (tag[0:2] != 'DE') 
-                && (tag[0:2] != 'DA') && (tag[0:1] != 'N') && (tag[0:2] != 'RG') && (tag[0:2] != 'PP') && (tag[0:2] != 'PD')
-                && (tag[0:2] != 'PX') && (tag[0:2] != 'PT') && (tag[0:2] != 'PR') && (tag[0:2] != 'PE') && (tag[0:1] != 'I')
-                && (tag[0:1] != 'S') && (tag[0:1] != 'Z') && (tag[0:1] != 'W')):
+            if((tag[0:1] != 'F') and (tag[0:2] != 'RG') and (tag[0:2] != 'DP') and (tag[0:2] != 'DT') and (tag[0:2] != 'DE') 
+                and (tag[0:2] != 'DA') and (tag[0:1] != 'N') and (tag[0:2] != 'RG') and (tag[0:2] != 'PP') and (tag[0:2] != 'PD')
+                and (tag[0:2] != 'PX') and (tag[0:2] != 'PT') and (tag[0:2] != 'PR') and (tag[0:2] != 'PE') and (tag[0:1] != 'I')
+                and (tag[0:1] != 'S') and (tag[0:1] != 'Z') and (tag[0:1] != 'W')):
 
                 # Si la palabra está en el diccionario del comentario, se aumenta la frecuencia
                 # En caso contrario se la pone en el diccionario con valor 1
