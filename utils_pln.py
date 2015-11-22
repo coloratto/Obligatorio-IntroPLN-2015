@@ -272,6 +272,6 @@ def POS_tagging(datos):
                         
                 # Luego de tokenizado el comentario, se agrega una tupla a la lista que contendrá
                 # el diccionario de frecuencias y la clasificaion asociada al comentario
-                listaTuplas.insert(i,(dic,codificarClasificacion(datos[i][1])))
+        listaTuplas.insert(i,(dic,codificarClasificacion(datos[i][1])))
 
     return listaTuplas
