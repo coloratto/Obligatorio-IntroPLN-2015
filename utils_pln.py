@@ -3,6 +3,7 @@ import re
 import nltk
 from nltk.corpus import stopwords
 from subprocess import Popen, PIPE, STDOUT
+from nltk.metrics import *
 
 def diccionarioElementosSubjetivos(archivoElementosSubjetivos):
     positivosRaw = open(archivoElementosSubjetivos).read()
@@ -160,11 +161,48 @@ def getTasa(clf,datos_test):
         # En caso que la clasificacion sea la correcta se aumenta el acierto
         if(clasificacion == comentario[1]):
             aciertos += 1
-    
-    cm = nltk.ConfusionMatrix(salidaClasificador, salida)
-    print(cm)
 
-    return float(aciertos)/len(datos_test)
+    cm = nltk.ConfusionMatrix(salidaClasificador, salida)
+    print("Matriz de confusión:")
+    print(cm)
+    print("Accuracy:")
+    print(accuracy(salidaClasificador, salida))    
+    
+    prec_pos = cm.__getitem__(("pos","pos")) / (cm.__getitem__(("pos","pos")) + cm.__getitem__(("pos","neu")) + cm.__getitem__(("pos","neg")))
+    prec_neu = cm.__getitem__(("neu","neu")) / (cm.__getitem__(("neu","neu")) + cm.__getitem__(("neu","pos")) + cm.__getitem__(("neu","neg")))
+    prec_neg = cm.__getitem__(("neg","neg")) / (cm.__getitem__(("neg","neg")) + cm.__getitem__(("neg","pos")) + cm.__getitem__(("neg","neu")))
+
+
+    rec_pos = cm.__getitem__(("pos","pos")) / (cm.__getitem__(("pos","pos")) + cm.__getitem__(("neu","pos")) + cm.__getitem__(("neg","pos")))
+    rec_neu = cm.__getitem__(("neu","neu")) / (cm.__getitem__(("neu","neu")) + cm.__getitem__(("pos","neu")) + cm.__getitem__(("neg","neu")))
+    rec_neg = cm.__getitem__(("neg","neg")) / (cm.__getitem__(("neg","neg")) + cm.__getitem__(("pos","neg")) + cm.__getitem__(("neu","neg")))
+
+    f_score_pos = "NaN"
+    f_score_neu = "NaN"    
+    f_score_neg = "NaN"    
+
+    if((prec_pos + rec_pos) > 0):
+        f_score_pos = 2 * prec_pos * rec_pos / (prec_pos + rec_pos)
+    if((prec_neu + rec_neu) > 0):
+        f_score_neu = 2 * prec_neu * rec_neu / (prec_neu + rec_neu)
+    if((prec_neg + rec_neg) > 0):
+        f_score_neg = 2 * prec_neg * rec_neg / (prec_neg + rec_neg)
+
+    print("Precisión:")
+    print("\tPos: " + str(prec_pos))
+    print("\tNeu: " + str(prec_neu))
+    print("\tNeg: " + str(prec_neg))
+
+   
+    print("Recall:")
+    print("\tPos: " + str(rec_pos))
+    print("\tNeu: " + str(rec_neu))
+    print("\tNeg: " + str(rec_neg))
+
+    print("F-Score:")
+    print("\tPos: " + str(f_score_pos))
+    print("\tNeu: " + str(f_score_neu))
+    print("\tNeg: " + str(f_score_neg))
 
 def codificarClasificacionesSubjetivos(elementos_subjetivos):
     lista = []
